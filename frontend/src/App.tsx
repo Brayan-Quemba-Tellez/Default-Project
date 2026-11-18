@@ -7,6 +7,7 @@ import { Spinner } from './components/ui/Spinner';
 const HomePage = lazy(() => import('./pages/Home/HomePage'));
 const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
 const ProductsPage = lazy(() => import('./pages/Products/ProductsPage'));
 const ProductDetailPage = lazy(() => import('./pages/Products/ProductDetailPage'));
 const CartPage = lazy(() => import('./pages/Cart/CartPage'));
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/recuperar-password" element={<ForgotPasswordPage />} />
           <Route path="/productos" element={<ProductsPage />} />
           <Route path="/productos/:slug" element={<ProductDetailPage />} />
           <Route path="/carrito" element={<AuthGuard><CartPage /></AuthGuard>} />

@@ -16,6 +16,15 @@ class LoginCredentials(BaseModel):
     password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")
 async def register(
@@ -58,3 +67,23 @@ async def logout(
     # Con Redis implementado: agregar token a blacklist aquí
     # Por ahora el cliente debe descartar el token localmente
     return {"detail": "Sesión cerrada"}
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    """Solicitar recuperación de contraseña."""
+    service = AuthService(session)
+    return await service.forgot_password(data.email)
+
+
+@router.post("/reset-password")
+async def reset_password(
+    data: ResetPasswordRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    """Restablecer contraseña con token."""
+    service = AuthService(session)
+    return await service.reset_password(data.token, data.new_password)

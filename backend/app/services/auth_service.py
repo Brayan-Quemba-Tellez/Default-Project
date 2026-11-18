@@ -4,12 +4,48 @@ from fastapi import HTTPException, status
 import uuid
 from app.models.user import User
 from app.schemas.auth import UserCreate
-from app.utils.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
+from app.utils.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token, create_password_reset_token
 from app.config import settings
 
 class AuthService:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def forgot_password(self, email: str) -> dict:
+        result = await self.session.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
+        if not user:
+            return {
+                "message": "Si el correo está registrado, recibirás un enlace de recuperación.",
+                "reset_token": None,
+            }
+
+        token = create_password_reset_token({"sub": str(user.id), "email": user.email})
+        return {
+            "message": "Instrucciones de recuperación generadas exitosamente.",
+            "reset_token": token,
+        }
+
+    async def reset_password(self, token: str, new_password: str) -> dict:
+        try:
+            payload = decode_token(token)
+            if payload.get("purpose") != "password_reset":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Token no válido para restablecer contraseña"
+                )
+            user_id = uuid.UUID(payload.get("sub"))
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="El token de recuperación es inválido o ha expirado"
+            )
+
+        user = await self.session.get(User, user_id)
+        if not user or not user.is_active:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+
+        user.password_hash = hash_password(new_password)
+        await self.session.commit()
+        return {"message": "Tu contraseña ha sido actualizada exitosamente. Ya puedes iniciar sesión."}
 
     async def register(self, user_data: UserCreate) -> User:
         # Verificar duplicados por email
