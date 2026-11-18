@@ -1,0 +1,12 @@
+{
+  "name": "pymedb-root",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Root workspace runner for PyMEs platform",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix frontend test"
+  }
+}
